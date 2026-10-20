@@ -1,0 +1,29 @@
+# Codex CLI Module / Codex CLI 模块
+
+Codex app-server integration is implemented in `src/codex/client.js`.
+
+Codex app-server 集成逻辑位于 `src/codex/client.js`。
+
+Default CLI path / 默认 CLI 路径：
+
+```text
+codex（从 PATH 查找）
+```
+
+Override with / 可通过环境变量覆盖：
+
+```powershell
+$env:CODEX_CLI_PATH="C:/path/to/codex.exe"
+```
+
+兼容引擎的 QQ 群持久会话使用与 WorkBuddy 相同的隔离工作区：
+
+```text
+runtime/group-workspaces/<groupId>/
+```
+
+Each QQ group maps to one persistent Codex thread. Thread IDs and pending
+messages are stored in `runtime/qq-only-data/group-sessions.json`.
+
+每个 QQ 群绑定一条持久 Codex thread；threadId 与 pending 消息保存在
+`runtime/qq-only-data/group-sessions.json`。

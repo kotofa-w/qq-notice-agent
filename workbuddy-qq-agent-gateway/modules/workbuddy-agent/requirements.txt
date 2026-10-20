@@ -1,0 +1,2 @@
+codebuddy-agent-sdk==0.3.261
+Pillow==11.3.0
