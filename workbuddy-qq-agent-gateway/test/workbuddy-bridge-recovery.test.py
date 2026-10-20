@@ -79,6 +79,9 @@ class BridgeRecoveryTests(unittest.IsolatedAsyncioTestCase):
                 with patch.object(BRIDGE_MODULE, "CLI_PATH", str(script) + ".cmd"):
                     with self.assertRaisesRegex(RuntimeError, r"\.cmd/\.bat"):
                         BRIDGE_MODULE.sdk_transport(options)
+                with patch.object(BRIDGE_MODULE, "CLI_PATH", str(script) + ".missing"):
+                    with self.assertRaisesRegex(RuntimeError, "WorkBuddy CLI 不存在"):
+                        BRIDGE_MODULE.sdk_transport(options)
             executable = pathlib.Path(temporary, "codebuddy.exe")
             executable.write_bytes(b"offline fixture")
             with patch.object(BRIDGE_MODULE.os, "name", "nt"), \
@@ -213,7 +216,8 @@ class BridgeRecoveryTests(unittest.IsolatedAsyncioTestCase):
         with patch.dict(os.environ, {
             "CODEX_REMOTE_CONTACT_QQ_MCP_ENDPOINT": "http://127.0.0.1:12345/call",
             "CODEX_REMOTE_CONTACT_QQ_MCP_SECRET": "test-secret",
-        }), patch("codebuddy_agent_sdk.CodeBuddySDKClient", side_effect=clients) as factory:
+        }), patch("codebuddy_agent_sdk.CodeBuddySDKClient", side_effect=clients) as factory, \
+                patch.object(BRIDGE_MODULE, "sdk_transport", return_value=None):
             await bridge._make_client(normal)
             await bridge._make_client(source)
 
@@ -239,7 +243,8 @@ class BridgeRecoveryTests(unittest.IsolatedAsyncioTestCase):
         session = BRIDGE_MODULE.Session("thread-compaction", "/tmp")
         fake = FakeClient()
         fake.connect = AsyncMock()
-        with patch("codebuddy_agent_sdk.CodeBuddySDKClient", return_value=fake) as factory:
+        with patch("codebuddy_agent_sdk.CodeBuddySDKClient", return_value=fake) as factory, \
+                patch.object(BRIDGE_MODULE, "sdk_transport", return_value=None):
             await bridge._make_client(session)
         hooks = factory.call_args.kwargs["options"].hooks
         events = []
@@ -283,7 +288,8 @@ class BridgeRecoveryTests(unittest.IsolatedAsyncioTestCase):
         session.permission_mode = "acceptEdits"
         fake = FakeClient()
         fake.connect = AsyncMock()
-        with patch("codebuddy_agent_sdk.CodeBuddySDKClient", return_value=fake) as factory:
+        with patch("codebuddy_agent_sdk.CodeBuddySDKClient", return_value=fake) as factory, \
+                patch.object(BRIDGE_MODULE, "sdk_transport", return_value=None):
             await bridge._make_client(session)
         options = factory.call_args.kwargs["options"]
         self.assertEqual(options.disallowed_tools, [])
@@ -309,6 +315,7 @@ class BridgeRecoveryTests(unittest.IsolatedAsyncioTestCase):
 
         fake.receive_response = responses
         with patch("codebuddy_agent_sdk.CodeBuddySDKClient", return_value=fake) as factory, \
+                patch.object(BRIDGE_MODULE, "sdk_transport", return_value=None), \
                 patch.object(bridge, "_remember_session_id") as remember:
             await bridge._migrate_legacy_plan_session(session)
 
