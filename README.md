@@ -46,11 +46,21 @@ QQ 桥不可达、账号不符与 QQ 离线是不同状态。Hub 未观测区间
 
 需要 Windows、PowerShell 7、Node.js 22+、Python 3.10+，以及已安装并独立登录的兼容官方 CLI、兼容 OneBot QQ 桥。管理员 OWNER 与机器人 BOT 使用不同账号。
 
-在仓库根目录打开 PowerShell 7，然后执行：
+先获取源码；已有仓库可跳过克隆，进入自己的仓库根目录：
+
+```powershell
+git clone https://github.com/kotofa-w/qq-notice-agent.git
+Set-Location .\qq-notice-agent
+```
+
+没有 Git 时可选择 **Code → Download ZIP**，解压后在仓库根目录打开 PowerShell 7。然后执行：
 
 ```powershell
 Set-Location .\workbuddy-qq-agent-gateway
 & .\modules\workbuddy-agent\setup.ps1
+if (Test-Path -LiteralPath .\config\qq-only.env) {
+    throw 'config/qq-only.env 已存在，请保留并编辑现有配置。'
+}
 Copy-Item .\config\qq-only.windows.env.example .\config\qq-only.env
 # 编辑 qq-only.env：填写账号、令牌、OneBot 地址和官方 CLI 路径
 & .\modules\run-qq-only.ps1
@@ -76,6 +86,17 @@ Copy-Item .\config\qq-only.windows.env.example .\config\qq-only.env
 ## 验证与限制
 
 本仓库提供隔离测试和合成数据演示。测试通过只能说明对应代码检查通过，不能替代你自己的 QQ 桥、CLI、CalDAV、真实通知提取及手机提醒验收。公开快照不附带任何机器的部署成功声明。
+
+安装 Python 依赖后，可在 `workbuddy-qq-agent-gateway/` 目录运行与仓库 CI 对应的检查：
+
+```powershell
+npm test
+& .\modules\workbuddy-agent\.venv\Scripts\python.exe -X utf8 .\test\workbuddy-bridge-recovery.test.py
+& .\modules\workbuddy-agent\.venv\Scripts\python.exe -X utf8 .\modules\workbuddy-agent\test_image_processing.py
+npm run audit:public
+```
+
+`audit:public` 检查 Git 索引中的已跟踪内容，需要完整 Git 仓库；Download ZIP 不包含 Git 索引。它不能替代对本机未跟踪配置或待分享日志的人工检查。
 
 历史接口由 QQ 桥提供，媒体、撤回消息、跨版本身份和长时间离线的覆盖可能不完整。模型可能误判通知或时间；应核对原文与候选。发送成功的 QQ 消息不具备事务回滚保证，日历冲突不会被强制覆盖。第三方接口更新可能需要适配。
 
